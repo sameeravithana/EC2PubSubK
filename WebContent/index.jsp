@@ -94,13 +94,9 @@
 				return;
 			}
 		}
-			
-
-		
-
-		
 		
 		System.out.println("User Authorized Flag: "+isLoggedIn+" User: "+userName+" sessionID: "+sessionID);
+		
 		
 	%>
 	
@@ -403,11 +399,28 @@
                                 </div>
                             </div>
                             
-                            <div class="panel-body">                    
-			                    
-			                    
-                             	
-		                    </div>
+                            <div class="panel-body">
+								<form id="publishStream">
+
+									<div class="col-lg-6">
+										<div class="input-group">	
+											<select name="_okey">
+											<% for(String okey:engine.getS3_drv().getObjectKeys()){ %>
+												<option><%= okey %></option>
+												<% } %>
+											</select>
+											<!-- <input type="text" class="form-control" name="_dataurl" placeholder="Data File URL"> --> 										
+											<button type="submit" class="btn btn-danger">Publish
+												Stream (S3)</button>
+
+										</div>
+										<!-- /input-group -->
+									</div>
+									-
+									<!-- /.col-lg-6 -->
+
+								</form>
+							</div>
                             
                             <a href="#">
                                 <div class="panel-footer">
@@ -539,22 +552,8 @@
 										</div> -
 										<!-- /.col-lg-6 -->
 									
-									</form>	
-									
-									<form id="publishStream">						
-									
-										<div class="col-lg-6">										
-											<div class="input-group">
-												<!-- <input type="text" class="form-control" name="_snsPAMsg" placeholder="Message">	 -->											
-													
-					                            	<button type="submit" class="btn btn-danger">Publish Stream</button>
-												
-											</div>
-											<!-- /input-group -->
-										</div> -
-										<!-- /.col-lg-6 -->
-									
-									</form>									
+									</form>										
+																
 							</div>
 							<a href="#">
                                 <div class="panel-footer">

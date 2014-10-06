@@ -76,7 +76,8 @@ $(document).ready(function() {
 			data: $('#publishStream').serialize(),
 			success: function(data) {
 				if(data.isValid){
-					alert("Valid! Under Development");				
+					$('[name="_dataurl"]').val('');
+					alert("Valid!");				
 					
 					
 				}else{

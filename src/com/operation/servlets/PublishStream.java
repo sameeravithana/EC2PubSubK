@@ -41,7 +41,12 @@ public class PublishStream extends HttpServlet {
 		Map<String,Object> map=new HashMap<String,Object>();
 		boolean isValid=false;
 		System.out.println("Published Stream: ");
-		new Engine().getKin_drv().addDataRecords("EC2Stream");
+		String _dataUrl=request.getParameter("_dataurl");
+		String _okey=request.getParameter("_okey");
+		String lastSeqNumber=new Engine().getKin_drv().addDataRecords("EC2Stream",_okey);
+		//new Engine().getS3_drv().getObjectKeys();
+		if(lastSeqNumber!=null) isValid=true;
+		
 		map.put("isValid", isValid);
 		gsonwrt.write(response,map);
 	}

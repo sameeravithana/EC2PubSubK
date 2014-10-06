@@ -1,37 +1,35 @@
 package com.amazonaws.compute;
 
-import java.util.Date;
 import java.util.List;
 
 import com.amazonaws.auth.ProfileCredentials;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.sns.util.Topics;
-import com.amazonaws.services.sqs.model.Message;
 
 public class Engine {
-
+	
+		
 	SQSDriver sqs_drv;
 	public SQSDriver getSqs_drv() {
 		return sqs_drv;
 	}
 
 
-	SNSDriver sns_drv;
-	
+	SNSDriver sns_drv;	
 	public SNSDriver getSns_drv() {
 		return sns_drv;
 	}
 
-	EC2Driver ec2_drv;
-    
+	EC2Driver ec2_drv;    
     public EC2Driver getEc2_drv() {
 		return ec2_drv;
 	}
-
-    public KinesisDriver kin_drv;
     
+    S3Driver s3_drv;
+    public S3Driver getS3_drv() {
+		return s3_drv;
+	}
+
+    public KinesisDriver kin_drv;    
     public KinesisDriver getKin_drv() {
 		return kin_drv;
 	}
@@ -39,6 +37,7 @@ public class Engine {
 	ProfileCredentials profile;
     
     String topicArn;
+
 	
 	public String getTopicArn() {
 		return topicArn;
@@ -55,7 +54,10 @@ public class Engine {
 		sns_drv=new SNSDriver();
 		ec2_drv=new EC2Driver();
 		kin_drv=new KinesisDriver();
-		profile=new ProfileCredentials();		
+		s3_drv=new S3Driver();
+		profile=new ProfileCredentials();
+		
+	
 		
 	}
 	
@@ -100,11 +102,33 @@ public class Engine {
 	
 	}
 	
+	/*public void listFilesForFolder(File folder) {
+	    for (File fileEntry : folder.listFiles()) {
+	        if (fileEntry.isDirectory()) {
+	            listFilesForFolder(fileEntry);
+	        } else {
+	        	String dname=fileEntry.getName();
+	        	dlist.add(dname);
+	        }
+	    }
+	}
+	
+	public List<String> getDlist() {
+		
+		return dlist;
+	}
+	*/
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		
 
 	}
+
+
+	
+
+
+	
 
 
 	
