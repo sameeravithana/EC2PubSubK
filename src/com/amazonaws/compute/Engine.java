@@ -1,5 +1,6 @@
 package com.amazonaws.compute;
 
+import java.net.UnknownHostException;
 import java.util.List;
 
 import com.amazonaws.auth.ProfileCredentials;
@@ -49,7 +50,7 @@ public class Engine {
 	}
 
 
-	public Engine(){
+	public Engine() throws UnknownHostException{
 		sqs_drv=new SQSDriver();
 		sns_drv=new SNSDriver();
 		ec2_drv=new EC2Driver();

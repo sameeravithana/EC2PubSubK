@@ -88,3 +88,23 @@ $(document).ready(function() {
 		return false;
 	});
 });
+
+$(document).ready(function() {	
+	$('#processStream').submit(function() {
+		$.ajax({
+			url: 'processS',
+			type: 'POST',
+			dataType: 'json',
+			data: $('#processStream').serialize(),
+			success: function(data) {
+				if(data.isValid){					
+					alert("Valid!");			
+				}else{
+					alert("Invalid!");
+				}
+			}
+		});
+		return false;
+	});
+});
+

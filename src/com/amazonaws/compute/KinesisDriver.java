@@ -4,17 +4,27 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.ProfileCredentials;
+import com.amazonaws.compute.kinesis.RecordProcessorFactory;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.amazonaws.services.kinesis.model.CreateStreamRequest;
 import com.amazonaws.services.kinesis.model.DeleteStreamRequest;
 import com.amazonaws.services.kinesis.model.DescribeStreamRequest;
@@ -29,24 +39,70 @@ import com.amazonaws.services.kinesis.model.PutRecordRequest;
 import com.amazonaws.services.kinesis.model.PutRecordResult;
 import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.kinesis.model.Shard;
+import com.amazonaws.services.kinesis.model.ShardIteratorType;
 
 public class KinesisDriver {
 	
-	AmazonKinesisClient kin;
-	private String dfilePath="http://localhost:8080/EC2PubSub/datasets/nestoria-london.txt";
+	static AmazonKinesisClient kin;
 	
 	S3Driver s3_drv;
 	
+	private static KinesisClientLibConfiguration kinesisClientLibConfiguration;
+	
+	private static String applicationName = "EC2PubSub";
+	private static String streamName = "EC2Stream";
+	private static String kinesisEndpoint = "http://kinesis.us-east-1.amazonaws.com";
+	private static InitialPositionInStream initialPositionInStream = InitialPositionInStream.TRIM_HORIZON;
+	
 	private static final Log LOG = LogFactory.getLog(KinesisDriver.class);
+	
+	AWSCredentialsProvider credentialsProvider=null;
 
-	public AmazonKinesisClient getKin() {
+	private int readCount = 20;
+
+	public static AmazonKinesisClient getKin() {
 		return kin;
 	}
 
 	public KinesisDriver(){
-		kin=new ProfileCredentials().getKinesisClient();
+		credentialsProvider=new ProfileCredentials();
+		
+		kin=((ProfileCredentials) credentialsProvider).getKinesisClient();
+		
 		s3_drv=new S3Driver();
 			//kin.setEndpoint("us-east-1", "kinesis", "http://kinesis.us-east-1.amazonaws.com");
+		
+		
+	}
+	
+	public void startProcessingData() throws UnknownHostException{	
+		boolean flag=false;
+        System.out.println("Processing stream " + streamName);
+        
+        
+        // ensure the JVM will refresh the cached IP values of AWS resources (e.g. service endpoints).
+        java.security.Security.setProperty("networkaddress.cache.ttl" , "60");
+
+        String workerId = InetAddress.getLocalHost().getCanonicalHostName() + ":" + UUID.randomUUID();
+        System.out.println("Using workerId: " + workerId);
+        
+        kinesisClientLibConfiguration = new KinesisClientLibConfiguration(applicationName, streamName,
+                credentialsProvider, workerId).withInitialPositionInStream(initialPositionInStream);
+        
+        IRecordProcessorFactory recordProcessorFactory = new RecordProcessorFactory();
+        Worker worker = new Worker(recordProcessorFactory, kinesisClientLibConfiguration);
+        
+        int exitCode = 0;
+        try {
+            worker.run();
+            System.out.println("Worker Thread Returns!");
+            flag=true;
+        } catch (Throwable t) {
+            System.out.println("Caught throwable while processing data.");
+            t.printStackTrace();
+            exitCode = 1;
+        }
+        System.exit(exitCode);        
 	}
 	
 	public void createStream(String streamName, int streamSize) {
@@ -180,19 +236,19 @@ public class KinesisDriver {
 		  return shardIterator;
 	}
 	
-	public List<Record> getDataRecords(String streamName, Shard shard) {
+	public List<Record> getShardRecords(String streamName, Shard shard) {
 		// Continuously read data records from a shard
-		List<Record> records;
-		String shardIterator;
+		List<Record> records = new ArrayList<Record>();
+		String shardIterator=getShards(streamName, shard);
 		while (true) {
-			GetRecordsRequest getRecordsRequest = new GetRecordsRequest();
-			getRecordsRequest.setShardIterator(getShards(streamName, shard));
+			GetRecordsRequest getRecordsRequest = new GetRecordsRequest();			
+			getRecordsRequest.setShardIterator(shardIterator);
 			getRecordsRequest.setLimit(25);
 
 			GetRecordsResult getRecordsResult = getKin().getRecords(
 					getRecordsRequest);
-			records = getRecordsResult.getRecords();
-
+			records.addAll(getRecordsResult.getRecords());			
+			
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException exception) {
@@ -202,9 +258,33 @@ public class KinesisDriver {
 			shardIterator = getRecordsResult.getNextShardIterator();
 			
 			if(shardIterator==null) break;
+			
+			System.out.println("    Retrieve Records size: "+records.size()+" Shard Iterator: "+shardIterator);
+			
+			if(records.size()>readCount ) break;
 		}
 		return records;
 	}
+	
+	public List<Record> getDataRecords(String streamName){
+		System.out.println("Getting Shard Details..");
+		List<Shard> shards=getAllShards(streamName);
+		
+		List<Record> records=new ArrayList<Record>();
+		for(Shard shard:shards){
+			System.out.println("Shard: "+shard.getShardId());
+			List<Record> srecords=getShardRecords(streamName, shard);
+			System.out.println("   Getting shard records");
+			for(Record record: srecords){
+				String d = new String(record.getData().array(),	Charset.forName("UTF-8"));
+				System.out.println("    Record: "+d);
+				records.add(record);
+			}
+			
+		}
+		return records;
+	}
+	
 	
 	public List<Shard> getAllShards(String streamName){
 		DescribeStreamRequest describeStreamRequest = new DescribeStreamRequest();

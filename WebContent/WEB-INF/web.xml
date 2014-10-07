@@ -4,7 +4,6 @@
   <welcome-file-list>
     <welcome-file>welcome.jsp</welcome-file>
   </welcome-file-list>
-  
   <servlet>
     <description></description>
     <display-name>HandleTopic</display-name>
@@ -54,7 +53,7 @@
   <servlet-mapping>
     <servlet-name>OAuthCodeCallbackHandlerServlet</servlet-name>
     <url-pattern>/oauth2callback</url-pattern>
-  </servlet-mapping>  
+  </servlet-mapping>
   <servlet>
     <description></description>
     <display-name>LogoutServlet</display-name>
@@ -64,5 +63,15 @@
   <servlet-mapping>
     <servlet-name>LogoutServlet</servlet-name>
     <url-pattern>/LogoutServlet</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ProcessStream</display-name>
+    <servlet-name>ProcessStream</servlet-name>
+    <servlet-class>com.operation.servlets.ProcessStream</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ProcessStream</servlet-name>
+    <url-pattern>/ProcessStream</url-pattern>
   </servlet-mapping>
 </web-app>

@@ -3,6 +3,9 @@
 <%@ page import="com.amazonaws.compute.Engine"%>
 <%@ page import="java.util.List"%>
 <%@ page import="org.apache.commons.codec.binary.Base64"%>
+<%@ page import="com.amazonaws.services.kinesis.model.Record" %>
+<%@ page import="java.nio.charset.Charset" %>
+
 
 
 
@@ -27,7 +30,7 @@
 	engine = new Engine();
 
 	System.out.println("Amazon EC2 Publish/Subscribe");
-	System.out.println("Top-k Publish/Subscribe Demonstration");
+	System.out.println("Streaming Service");
 	System.out.println("--------------------------------------");
 
 	//engine.runSQNS();
@@ -59,8 +62,8 @@
 
 <!-- <link rel="stylesheet" href="styles/styles.css" type="text/css" media="screen"> -->
 
-<script type="text/javascript" src="js/jquery-1.11.0.js"></script>
-<script type="text/javascript" src="js/control.js"></script>
+<!-- <script type="text/javascript" src="js/jquery-1.11.0.js"></script>
+<script type="text/javascript" src="js/control.js"></script> -->
 
 
 
@@ -113,7 +116,7 @@
 						class="icon-bar"></span> <span class="icon-bar"></span> <span
 						class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="about.jsp">About the project</a>
+				<a class="navbar-brand" href="index.html">About the project</a>
 			</div>
 			<!-- Top Menu Items -->
 			<ul class="nav navbar-right top-nav">
@@ -286,8 +289,8 @@
 				<div class="row">
 					<div class="col-lg-12">
 						<h1 class="page-header">
-							Amazon EC2 Top-k Publish/Subscribe <small>Statistics
-								Overview</small>
+							Amazon EC2 Top-k Publish/Subscribe <small> Live Streaming
+								Details</small>
 						</h1>
 						<ol class="breadcrumb">
 							<li class="active"><i class="fa fa-dashboard"></i> Dashboard
@@ -297,310 +300,49 @@
 				</div>
 				<!-- /.row -->
 
-				<div class="row">
-					<div class="col-lg-12">
-						<div class="alert alert-info alert-dismissable">
-							<button type="button" class="close" data-dismiss="alert"
-								aria-hidden="true">&times;</button>
-							<i class="fa fa-info-circle"></i> <strong>Like the
-								architecture?</strong> Fund us <a href="http://ucsc.lk"
-								class="alert-link">Distributed System Research</a>
-						</div>
-					</div>
-				</div>
-				<!-- /.row -->
+
 
 
 				<div class="row">
-					<div class="col-lg-3 col-md-6">
-						<div class="panel panel-primary">
-							<div class="panel-heading">
-								<div class="row">
-									<div class="col-xs-3">
-										<i class="fa fa-comments fa-5x"></i>
-									</div>
-									<div class="col-xs-9 text-right">
-										<%
-											List<String> ins = engine.getEc2_drv().getEC2Instances();
-										%>
-										<div class="huge"><%=ins.size()%></div>
-										<div>Amazon EC2</div>
-										<div class="dropdown">
-											<button class="btn btn-default dropdown-toggle" type="button"
-												id="dropdownMenu1" data-toggle="dropdown">
-												Running Virtual Instances <span class="caret"></span>
-											</button>
-											<ul class="dropdown-menu" role="menu"
-												aria-labelledby="ec2_dropdownMenu">
-												<li role="presentation">
-													<%
-														for (String ec2Ins : ins) {
-													%> <a role="menuitem" tabindex="-1" href="#"><%=ec2Ins%></a>
-													<%
-														}
-													%>
-												</li>
-											</ul>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div class="panel-body"></div>
-
-							<a href="#">
-								<div class="panel-footer">
-									<span class="pull-left">View Details</span> <span
-										class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-									<div class="clearfix"></div>
-								</div>
-							</a>
-						</div>
-					</div>
-
-					<div class="col-lg-3 col-md-6">
-						<div class="panel panel-yellow">
-							<div class="panel-heading">
-								<div class="row">
-									<div class="col-xs-3">
-										<i class="fa fa-comments fa-5x"></i>
-									</div>
-									<div class="col-xs-9 text-right">
-										<%
-											List<String> streams = engine.getKin_drv().listKinesisStream();
-										%>
-										<div class="huge"><%=streams.size()%></div>
-										<div>Amazon Kinesis</div>
-										<div class="dropdown">
-											<button class="btn btn-default dropdown-toggle" type="button"
-												id="dropdownMenu1" data-toggle="dropdown">
-												Active Streams <span class="caret"></span>
-											</button>
-											<ul class="dropdown-menu" role="menu"
-												aria-labelledby="ec2_dropdownMenu">
-												<li role="presentation">
-													<%
-														for (String stream : streams) {
-													%> <a role="menuitem" tabindex="-1" href="#"><%=stream%></a>
-													<%
-														}
-													%>
-												</li>
-											</ul>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div class="panel-body">
-								<form id="publishStream">
-
-									<div class="col-lg-6">
-										<div class="input-group">
-											<select name="_okey">
-												<%
-													for (String okey : engine.getS3_drv().getObjectKeys()) {
-												%>
-												<option><%=okey%></option>
-												<%
-													}
-												%>
-											</select>
-											<!-- <input type="text" class="form-control" name="_dataurl" placeholder="Data File URL"> -->
-											<button type="submit" class="btn btn-danger">Publish
-												Stream (S3)</button>
-
-										</div>
-										<!-- /input-group -->
-									</div>
-									-
-									<!-- /.col-lg-6 -->
-
-								</form>
-
-								<form id="processStream">
-
-									<div class="col-lg-6">
-										<div class="input-group">
-
-											<!-- <input type="text" class="form-control" name="_dataurl" placeholder="Data File URL"> -->
-											<button type="submit" class="btn btn-success">
-												Process Stream</button>
-
-										</div>
-										<!-- /input-group -->
-									</div>
-									-
-									<!-- /.col-lg-6 -->
-
-								</form>
-
-								
-								
-								
-							</div>
-
-							<a href="#">
-								<div class="panel-footer">
-									<span class="pull-left">View Details</span> <span
-										class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-									<div class="clearfix"></div>
-								</div>
-							</a>
-						</div>
-					</div>
-
-					<div class="col-lg-3 col-md-6">
-						<div class="panel panel-green">
-							<div class="panel-heading">
-								<div class="row">
-									<div class="col-xs-3">
-										<i class="fa fa-tasks fa-5x"></i>
-									</div>
-									<div class="col-xs-9 text-right">
-										<%
-											List<String> sqsl = engine.getSqs_drv().listEC2Queues();
-										%>
-										<div class="huge"><%=sqsl.size()%></div>
-										<div>Amazon SQS</div>
-										<div class="dropdown">
-											<button class="btn btn-default dropdown-toggle" type="button"
-												id="dropdownMenu1" data-toggle="dropdown">
-												Active Queues <span class="caret"></span>
-											</button>
-											<ul class="dropdown-menu" role="menu"
-												aria-labelledby="dropdownMenu1">
-												<li role="presentation">
-													<%
-														for (String queueUrl : sqsl) {
-													%> <a role="menuitem" tabindex="-1" href="<%=queueUrl%>"><%=queueUrl%></a>
-													<%
-														}
-													%>
-												</li>
-											</ul>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div class="panel-body"></div>
-							<a href="#">
-								<div class="panel-footer">
-									<span class="pull-left">View Details</span> <span
-										class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-									<div class="clearfix"></div>
-								</div>
-							</a>
-						</div>
-					</div>
-					<div class="col-lg-3 col-md-6">
-						<div class="panel panel-yellow">
-							<div class="panel-heading">
-								<div class="row">
-									<div class="col-xs-3">
-										<i class="fa fa-shopping-cart fa-5x"></i>
-									</div>
-									<div class="col-xs-9 text-right">
-										<%
-											List<String> snsl = engine.getSns_drv().listEC2Topics();
-										%>
-										<div class="huge"><%=snsl.size()%></div>
-										<div>Amazon SNS</div>
-										<div class="dropdown">
-											<button class="btn btn-default dropdown-toggle" type="button"
-												id="dropdownMenu1" data-toggle="dropdown">
-												Active Topics <span class="glyphicon glyphicon-eye-open"></span>
-											</button>
-											<ul class="dropdown-menu" role="menu"
-												aria-labelledby="dropdownMenu1">
-												<li role="presentation">
-													<%
-														for (String topicArn : snsl) {
-													%> <a role="menuitem" tabindex="-1" href="<%=topicArn%>"><%=topicArn%></a>
-													<%
-														}
-													%>
-												</li>
-											</ul>
-										</div>
-
-									</div>
-								</div>
-							</div>
-
-							<div class="panel-body">
-
-								<form id="buildTopic">
-
-									<div class="col-lg-6">
-										<div class="input-group">
-											<input type="text" class="form-control" name="_topic"
-												placeholder="Topic">
-											<button type="submit" class="btn btn-default">Build
-												Topic</button>
-										</div>
-										<!-- /input-group -->
-									</div>
-									<!-- /.col-lg-6 -->
-
-								</form>
-
-								<form id="subscribeTopic">
-
-									<div class="col-lg-6">
-										<div class="input-group">
-											<input type="text" class="form-control" name="_snsTopic"
-												placeholder="Topic ARN"> <input type="text"
-												class="form-control" name="_snsProtocol"
-												placeholder="Protocol"> <input type="text"
-												class="form-control" name="_snsEnd" placeholder="Endpoint">
-											<button type="submit" class="btn btn-primary">Subscribe</button>
-										</div>
-										<!-- /input-group -->
-									</div>
-									-
-									<!-- /.col-lg-6 -->
-
-								</form>
-
-
-
-								<form id="publishTopic">
-
-									<div class="col-lg-6">
-										<div class="input-group">
-											<input type="text" class="form-control" name="_snsPTopic"
-												placeholder="Topic ARN"> <input type="text"
-												class="form-control" name="_snsPMsg" placeholder="Message">
-											<button type="submit" class="btn btn-success">Publish</button>
-
-										</div>
-										<!-- /input-group -->
-									</div>
-									-
-									<!-- /.col-lg-6 -->
-
-								</form>
-
-							</div>
-							<a href="#">
-								<div class="panel-footer">
-									<span class="pull-left">View Details</span> <span
-										class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-									<div class="clearfix"></div>
-								</div>
-							</a>
-
-
-
-						</div>
-					</div>
+				
+							
 					
+					
+					
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Record #</th>
+                                                <th>Partition Key</th>
+                                                <th>Sequence Number</th>
+                                                <th>Timestamp</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        	<% List<Record> records=engine.getKin_drv().getDataRecords("EC2Stream"); %>
+											<% for(Record record:records) { %>
+												<tr>                                                                                          
+													<%   String dataRecord = new String(record.getData().array(),	Charset.forName("UTF-8")); %>
+													<%   String partitionKey = record.getPartitionKey(); %>
+													<%   String seqNumber = record.getSequenceNumber(); %>
+													<td><%=  dataRecord %></td>
+													<td><%=  partitionKey %></td>
+													<td><%=  seqNumber %></td>
+													<td> just now </td>
+												 </tr>
+											<% } %>
+                                        
+                                            
+                                            
+                                        </tbody>
+                                    </table>
+                                </div>
+                        
+					
+					
+
 				</div>
-				<!-- /.row -->
-
-					
 
 			</div>
 			<!-- /.container-fluid -->
