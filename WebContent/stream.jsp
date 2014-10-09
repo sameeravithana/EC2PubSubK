@@ -3,37 +3,23 @@
 <%@ page import="com.amazonaws.compute.Engine"%>
 <%@ page import="java.util.List"%>
 <%@ page import="org.apache.commons.codec.binary.Base64"%>
-<%@ page import="com.amazonaws.services.kinesis.model.Record" %>
-<%@ page import="java.nio.charset.Charset" %>
+<%@ page import="com.amazonaws.services.kinesis.model.Record"%>
+<%@ page import="java.nio.charset.Charset"%>
+<%@ page import="com.fasterxml.jackson.databind.ObjectMapper"%>
+<%@ page import="com.pubsub.model.Publication"%>
 
 
 
 
-<%!private Engine engine;%>
-
-<%
-	/*
-	 * AWS Elastic Beanstalk checks your application's health by periodically
-	 * sending an HTTP HEAD request to a resource in your application. By
-	 * default, this is the root or default resource in your application,
-	 * but can be configured for each environment.
-	 *
-	 * Here, we report success as long as the app server is up, but skip
-	 * generating the whole page since this is a HEAD request only. You
-	 * can employ more sophisticated health checks in your application.
-	 */
-	if (request.getMethod().equals("HEAD"))
-		return;
-%>
 
 <%
-	engine = new Engine();
+	
 
 	System.out.println("Amazon EC2 Publish/Subscribe");
 	System.out.println("Streaming Service");
 	System.out.println("--------------------------------------");
 
-	//engine.runSQNS();
+	
 %>
 
 <!DOCTYPE html>
@@ -62,10 +48,8 @@
 
 <!-- <link rel="stylesheet" href="styles/styles.css" type="text/css" media="screen"> -->
 
-<!-- <script type="text/javascript" src="js/jquery-1.11.0.js"></script>
-<script type="text/javascript" src="js/control.js"></script> -->
-
-
+<script type="text/javascript" src="js/jquery-1.11.0.js"></script>
+<script type="text/javascript" src="js/control.js"></script>
 
 </head>
 <body>
@@ -237,9 +221,14 @@
 					<li><a href="#"><i class="fa fa-fw fa-desktop"></i> Queue
 							Service</a></li>
 					<li><a href="#"><i class="fa fa-fw fa-wrench"></i>
-							Notification Service</a></li>
-					<li><a href="stream.jsp"><i class="fa fa-fw fa-desktop"></i>
-							Streaming Service</a></li>
+							Notification Service</a></li>					
+					<li><a href="javascript:;" data-toggle="collapse"
+						data-target="#demo"><i class="fa fa-fw fa-arrows-v"></i>
+							Streaming Service <i class="fa fa-fw fa-caret-down"></i></a>
+						<ul id="demo" class="collapse">
+							<li><a href="stream.jsp">Generate</a></li>
+							<li><a href="process.jsp">Process</a></li>
+						</ul></li>
 					<li><a href="javascript:;" data-toggle="collapse"
 						data-target="#demo"><i class="fa fa-fw fa-arrows-v"></i>
 							History <i class="fa fa-fw fa-caret-down"></i></a>
@@ -303,44 +292,79 @@
 
 
 
-				<div class="row">
-				
+				 <div class="row"> 
+										
 							
-					
-					
-					
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-hover table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Record #</th>
-                                                <th>Partition Key</th>
-                                                <th>Sequence Number</th>
-                                                <th>Timestamp</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        	<% List<Record> records=engine.getKin_drv().getDataRecords("EC2Stream"); %>
-											<% for(Record record:records) { %>
-												<tr>                                                                                          
-													<%   String dataRecord = new String(record.getData().array(),	Charset.forName("UTF-8")); %>
-													<%   String partitionKey = record.getPartitionKey(); %>
-													<%   String seqNumber = record.getSequenceNumber(); %>
-													<td><%=  dataRecord %></td>
-													<td><%=  partitionKey %></td>
-													<td><%=  seqNumber %></td>
-													<td> just now </td>
-												 </tr>
-											<% } %>
-                                        
-                                            
-                                            
-                                        </tbody>
-                                    </table>
-                                </div>
-                        
-					
-					
+									
+								<div class="col-xs-12 col-md-8">
+									<div class="input-group">
+										<form id="generateStream">
+																				
+											<button type="submit" class="btn btn-success btn-lg">
+												Generate Stream</button>
+												
+										</form>
+									</div>
+									<!-- /input-group -->
+								</div>								-
+								<!-- /.col-lg-6 -->								
+								
+
+								
+								<div class="col-xs-6 col-md-4">
+									<div class="input-group">
+										<form id="refreshStream">																					
+											<button type="submit" class="btn btn-warning btn-lg pull-right">Refresh</button>													
+										</form>
+			
+										
+										<!-- <div class="btn-group">
+											<button type="button" class="btn btn-default dropdown-toggle"
+												data-toggle="dropdown">
+												TRIM_HORIZON <span class="caret"></span>
+											</button>
+											<ul class="dropdown-menu" role="menu">
+												<li><a href="#">TRIM_HORIZON</a></li>
+												<li><a href="#">LATEST</a></li>
+												<li><a href="#">ATSEQUENCENUMBER</a></li>
+												<li><a href="#">AFTERSEQUENCENUMBER</a></li>												
+											</ul>
+										</div> -->
+									</div>
+									<!-- /input-group -->
+								</div>
+								<!-- /.col-lg-6 -->
+								
+
+							
+						
+					</div> 
+				
+
+
+
+				<div class="row">
+
+					<div class="table-responsive">
+						<table id="recordTable"
+							class="table table-bordered table-hover table-striped">
+							<thead>
+								<tr>
+									<th>Publication</th>
+									<th>Partition Key</th>
+									<th>Sequence Number</th>
+									<th>Timestamp</th>
+								</tr>
+							</thead>
+							<tbody>
+
+
+							</tbody>
+						</table>
+					</div>
+
+
+
 
 				</div>
 

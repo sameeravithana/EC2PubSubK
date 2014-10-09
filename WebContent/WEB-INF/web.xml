@@ -74,4 +74,24 @@
     <servlet-name>ProcessStream</servlet-name>
     <url-pattern>/ProcessStream</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>GenerateSream</display-name>
+    <servlet-name>GenerateSream</servlet-name>
+    <servlet-class>com.operation.servlets.GenerateSream</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GenerateSream</servlet-name>
+    <url-pattern>/GenerateSream</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>RefreshStream</display-name>
+    <servlet-name>RefreshStream</servlet-name>
+    <servlet-class>com.operation.servlets.RefreshStream</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>RefreshStream</servlet-name>
+    <url-pattern>/RefreshStream</url-pattern>
+  </servlet-mapping>
 </web-app>

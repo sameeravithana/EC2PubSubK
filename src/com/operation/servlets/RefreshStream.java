@@ -1,7 +1,9 @@
 package com.operation.servlets;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -11,18 +13,24 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.amazonaws.compute.Engine;
+import com.amazonaws.services.kinesis.model.Record;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pubsub.model.Publication;
 
 /**
- * Servlet implementation class ProcessStream
+ * Servlet implementation class RefreshStream
  */
-@WebServlet("/processS")
-public class ProcessStream extends HttpServlet {
+@WebServlet("/refreshS")
+public class RefreshStream extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	GsonWriter gsonwrt;
+	
+	private final static ObjectMapper JSON = new ObjectMapper();
+	
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public ProcessStream() {
+    public RefreshStream() {
         super();
         gsonwrt=new GsonWriter();
     }
@@ -40,13 +48,29 @@ public class ProcessStream extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Map<String,Object> map=new HashMap<String,Object>();
 		boolean isValid=false;
-		System.out.println("Action Binded: Processing Stream");
+		System.out.println("Action Binded: Refreshing Stream");
+		List<Record> records=new Engine().getKin_drv().getDataRecords();
 		
-		new Engine().getKin_drv().startCounterApp();
+		for(Record record:records) { 
+			HashMap<String, Object> rmap=new HashMap<String,Object>();
+			String dataRecord = new String(record.getData().array(),	Charset.forName("UTF-8")); 
+			Publication pubRecord = JSON.readValue(dataRecord, Publication.class);				
+			String partitionKey = record.getPartitionKey(); 
+			String seqNumber = record.getSequenceNumber(); 
+				rmap.put("publication", pubRecord);
+				rmap.put("partitionKey",partitionKey);
+				rmap.put("seqNumber",seqNumber);
+				
+				map.put(seqNumber, rmap);
+		}
+		
 		isValid=true;
 		
 		map.put("isValid", isValid);
 		gsonwrt.write(response,map);
 	}
+	
+	
+		
 
 }

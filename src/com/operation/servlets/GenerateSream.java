@@ -13,16 +13,16 @@ import javax.servlet.http.HttpServletResponse;
 import com.amazonaws.compute.Engine;
 
 /**
- * Servlet implementation class ProcessStream
+ * Servlet implementation class GenerateSream
  */
-@WebServlet("/processS")
-public class ProcessStream extends HttpServlet {
+@WebServlet("/generateS")
+public class GenerateSream extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	GsonWriter gsonwrt;
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public ProcessStream() {
+    public GenerateSream() {
         super();
         gsonwrt=new GsonWriter();
     }
@@ -40,13 +40,17 @@ public class ProcessStream extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Map<String,Object> map=new HashMap<String,Object>();
 		boolean isValid=false;
-		System.out.println("Action Binded: Processing Stream");
-		
-		new Engine().getKin_drv().startCounterApp();
-		isValid=true;
+		System.out.println("Action Binded: Generating Stream");
+		//new Engine().getKin_drv().startProcessingData();
+		try {
+			new Engine().getKin_drv().streamWrite();
+			isValid=true;
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		map.put("isValid", isValid);
 		gsonwrt.write(response,map);
 	}
-
 }
