@@ -127,8 +127,10 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
         kinesisShardId = shardId;
         resetCheckpointAlarm();
 
+        System.out.println("Init: DynamoDB Persister ");
         persister.initialize();
 
+        System.out.println("Init: Sliding Window");
         // Create a sliding window whose size is large enough to hold an entire range of individual interval counts.
         counter = new SlidingWindowCounter<T>((int) (computeRangeInMillis / computeIntervalInMillis));
 

@@ -20,5 +20,6 @@
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/gson-2.2.4.jar"/>
 	<classpathentry kind="con" path="com.google.gdt.eclipse.managedapis.MANAGED_API_CONTAINER/oauth2-v1r80lv1.18.0-rc"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/amazon-kinesis-client-1.1.1.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jetty-util-8.1.9.v20130131.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

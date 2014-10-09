@@ -94,4 +94,14 @@
     <servlet-name>RefreshStream</servlet-name>
     <url-pattern>/RefreshStream</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>GetCountsServlet</display-name>
+    <servlet-name>GetCountsServlet</servlet-name>
+    <servlet-class>com.operation.servlets.GetCountsServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GetCountsServlet</servlet-name>
+    <url-pattern>/GetCounts</url-pattern>
+  </servlet-mapping>
 </web-app>

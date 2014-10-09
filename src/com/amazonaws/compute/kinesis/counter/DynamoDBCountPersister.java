@@ -119,6 +119,8 @@ public class DynamoDBCountPersister implements CountPersister<Publication> {
         };
         dynamoDBSender.setDaemon(true);
         dynamoDBSender.start();
+        
+        System.out.println("DynamoDB sender started");
     }
 
     @Override
@@ -146,6 +148,8 @@ public class DynamoDBCountPersister implements CountPersister<Publication> {
                 pairCount.setReferrerCounts(new ArrayList<ReferrerCount>());
                 pairCount.setHost(hostname);
                 countMap.put(pair.getResource(), pairCount);
+                
+                System.out.println("Put PairCount to DynamoDB: "+pairCount);
             }
 
             // Add referrer to list of refcounts for this resource and time

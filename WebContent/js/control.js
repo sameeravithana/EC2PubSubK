@@ -116,8 +116,7 @@ $(document).ready(function() {
 			dataType: 'json',
 			data: $('#processStream').serialize(),
 			success: function(data) {
-				if(data.isValid){	
-					
+				if(data.isValid){					
 					alert("Valid!");			
 				}else{
 					alert("Invalid!");
@@ -168,7 +167,7 @@ $(document).ready(function() {
 			            //Access the items from their properties
 						//console.log("PK : " + item.partitionKey);
 						//console.log("SN : " + item.seqNumber);
-						//console.log("Publication : "+item.publication.resource+" "+item.publication.referee+" "+item.publication.timestamp);
+						console.log("Publication : "+item.publication.resource+" "+item.publication.referee+" "+item.publication.timestamp);
 						$('#recordTable tr:last').after('<tr>' +
 								'<td> '+item.publication.resource+' '+item.publication.referee+' '+'</td>'+
 								'<td> '+item.partitionKey+'</td>'+

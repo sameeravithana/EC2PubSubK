@@ -41,7 +41,7 @@ public class GenerateSream extends HttpServlet {
 		Map<String,Object> map=new HashMap<String,Object>();
 		boolean isValid=false;
 		System.out.println("Action Binded: Generating Stream");
-		//new Engine().getKin_drv().startProcessingData();
+		
 		try {
 			new Engine().getKin_drv().streamWrite();
 			isValid=true;

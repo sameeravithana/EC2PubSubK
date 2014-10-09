@@ -43,6 +43,7 @@ public class ProcessStream extends HttpServlet {
 		System.out.println("Action Binded: Processing Stream");
 		
 		new Engine().getKin_drv().startCounterApp();
+		//new Engine().getKin_drv().startProcessingData();
 		isValid=true;
 		
 		map.put("isValid", isValid);

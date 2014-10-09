@@ -397,70 +397,7 @@
 								</div>
 							</div>
 
-							<div class="panel-body">
-								<%-- <div class="row">
-
-								<div class="col-xs-9">
-									<div class="input-group">
-										<form id="publishStream">
-											<select name="_okey">
-												<%
-													for (String okey : engine.getS3_drv().getObjectKeys()) {
-												%>
-												<option><%=okey%></option>
-												<%
-													}
-												%>
-											</select>
-											<!-- <input type="text" class="form-control" name="_dataurl" placeholder="Data File URL"> -->
-											<button type="submit" class="btn btn-danger">Publish
-												Stream (S3)</button>
-										</form>
-									</div>
-									<!-- /input-group -->
-								</div>
-								-
-								<!-- /.col-lg-6 -->
-
-
-								
-
-
-								<div class="col-xs-6">
-									<div class="input-group">
-										<form id="generateStream">
-											<!-- <input type="text" class="form-control" name="_dataurl" placeholder="Data File URL"> -->
-											<button type="submit" class="btn btn-success">
-												Generate Stream</button>
-										</form>
-									</div>
-									<!-- /input-group -->
-								</div>
-								-
-								<!-- /.col-lg-6 -->
-
-
-
-
-
-								<div class="col-xs-9">
-									<div class="input-group">
-										<form id="processStream">
-											<!-- <input type="text" class="form-control" name="_dataurl" placeholder="Data File URL"> -->
-											<button type="submit" class="btn btn-info">Process
-												Generated Stream</button>
-										</form>
-									</div>
-									<!-- /input-group -->
-								</div>								
-								<!-- /.col-lg-6 -->
-
-
-								</div> --%>
-
-
-
-							</div>
+							
 
 							<a href="/stream.jsp">
 								<div class="panel-footer">

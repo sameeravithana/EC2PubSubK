@@ -46,10 +46,21 @@
 <link href="font-awesome-4.1.0/css/font-awesome.min.css"
 	rel="stylesheet" type="text/css">
 
-<!-- <link rel="stylesheet" href="styles/styles.css" type="text/css" media="screen"> -->
+	<!-- jQuery Version 1.11.0 -->
+	<script src="js/jquery-1.11.0.js"></script>
+	
+	<script type="text/javascript" src="js/control.js"></script>
 
-<script type="text/javascript" src="js/jquery-1.11.0.js"></script>
-<script type="text/javascript" src="js/control.js"></script>
+  <!-- Include Flotchart.org scripts and dependencies -->
+  <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot-0.8.2/excanvas.min.js"></script><![endif]-->
+  <script src="js/flot-0.8.2/jquery.min.js"></script>
+  <script src="js/flot-0.8.2/jquery.flot.min.js"></script>
+  <script src="js/flot-0.8.2/jquery.flot.time.min.js"></script>
+
+  <!-- Include graph script and stylesheet -->
+  <script src="js/graph.js"></script>
+  
+  <link rel="stylesheet" href="css/graph.css" type="text/css"></link>
 
 </head>
 <body>
@@ -100,7 +111,7 @@
 						class="icon-bar"></span> <span class="icon-bar"></span> <span
 						class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="index.html">About the project</a>
+				<a class="navbar-brand" href="about.jsp">About the project</a>
 			</div>
 			<!-- Top Menu Items -->
 			<ul class="nav navbar-right top-nav">
@@ -310,22 +321,29 @@
 									<!-- /input-group -->
 								</div>
 								<!-- /.col-lg-6 -->
-								
 
-								
-								
-								
 
-							
-						
-					</div> 
-				
+					
+					
+
+
+
+
+
+				</div>
+
 
 
 
 				<div class="row">
-					
 
+					<div id="description"></div>
+					<div id="graph"></div>
+					<div id="updatedBy"></div>
+					<div id="topNContainer">
+						<div id="topNDescription"></div>
+						<div id="topN"></div>
+					</div>
 
 
 
@@ -340,15 +358,11 @@
 	</div>
 	<!-- /#wrapper -->
 
-	<!-- jQuery Version 1.11.0 -->
-	<script src="js/jquery-1.11.0.js"></script>
+	
 
 	<!-- Bootstrap Core JavaScript -->
 	<script src="js/bootstrap.min.js"></script>
 
-	<!-- Morris Charts JavaScript -->
-	<script src="js/plugins/morris/raphael.min.js"></script>
-	<script src="js/plugins/morris/morris.min.js"></script>
-	<script src="js/plugins/morris/morris-data.js"></script>
+	
 </body>
 </html>

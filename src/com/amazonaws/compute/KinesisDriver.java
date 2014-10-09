@@ -52,15 +52,15 @@ import com.pubsub.publisher.Publisher;
 
 public class KinesisDriver {
 	
-	static AmazonKinesisClient kin;
+	AmazonKinesisClient kin;
 	
 	S3Driver s3_drv;
 	
 	DynamoDBDriver ddb_drv;
 	
-	private static KinesisClientLibConfiguration kinesisClientLibConfiguration;
+	private KinesisClientLibConfiguration kinesisClientLibConfiguration;
 	
-	private static String applicationName = "EC2PubSub";
+	private static String applicationName = "EC2PubSubV101";
 	private static String streamName = "EC2Stream2";
 	private static String kinesisEndpoint = "http://kinesis.us-east-1.amazonaws.com";
 	
@@ -71,9 +71,9 @@ public class KinesisDriver {
 	 * TRIM_HORIZON to start with the oldest stored record.
 	 * LATEST to start with new records as they arrive
 	 */
-	private static InitialPositionInStream initialPositionInStream = InitialPositionInStream.LATEST;
+	private static InitialPositionInStream initialPositionInStream = InitialPositionInStream.TRIM_HORIZON;
 	
-	private static ShardIteratorType readShardIType = ShardIteratorType.LATEST;
+	private static ShardIteratorType readShardIType = ShardIteratorType.TRIM_HORIZON;
 	
 	private static final Log LOG = LogFactory.getLog(KinesisDriver.class);
 	
@@ -115,7 +115,7 @@ public class KinesisDriver {
 
 	
 
-	public static AmazonKinesisClient getKin() {
+	public AmazonKinesisClient getKin() {
 		return kin;
 	}
 
@@ -279,8 +279,8 @@ public class KinesisDriver {
             @Override
             public void run() {
                 try {
-                	//publisher.sendPairsIndefinitely(DELAY_BETWEEN_RECORDS_IN_MILLIS, TimeUnit.MILLISECONDS);
-                	publisher.sendPairs(20,DELAY_BETWEEN_RECORDS_IN_MILLIS, TimeUnit.MILLISECONDS);
+                	publisher.sendPairsIndefinitely(DELAY_BETWEEN_RECORDS_IN_MILLIS, TimeUnit.MILLISECONDS);
+                	//publisher.sendPairs(20,DELAY_BETWEEN_RECORDS_IN_MILLIS, TimeUnit.MILLISECONDS);
                 } catch (Exception ex) {
                     LOG.warn("Thread encountered an error while sending records. Records will no longer be put by this thread.",
                             ex);
@@ -324,8 +324,9 @@ public class KinesisDriver {
         
         int exitCode = 0;
         try {
+        	System.out.println("Worker Thread Running.");
             worker.run();
-            System.out.println("Worker Thread Returns!");
+            
             flag=true;
         } catch (Throwable t) {
             System.out.println("Caught throwable while processing data.");
@@ -366,6 +367,7 @@ public class KinesisDriver {
 
         Worker worker = new Worker(recordProcessor, kinesisClientLibConfiguration);
 
+        System.out.println("Starting workers.");
         int exitCode = 0;
         try {
             worker.run();

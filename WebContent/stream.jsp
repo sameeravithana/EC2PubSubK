@@ -8,7 +8,7 @@
 <%@ page import="com.fasterxml.jackson.databind.ObjectMapper"%>
 <%@ page import="com.pubsub.model.Publication"%>
 
-
+<%!private Engine engine;%>
 
 
 
@@ -18,6 +18,8 @@
 	System.out.println("Amazon EC2 Publish/Subscribe");
 	System.out.println("Streaming Service");
 	System.out.println("--------------------------------------");
+	
+	engine = new Engine();	
 
 	
 %>
@@ -100,7 +102,7 @@
 						class="icon-bar"></span> <span class="icon-bar"></span> <span
 						class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="index.html">About the project</a>
+				<a class="navbar-brand" href="about.jsp">About the project</a>
 			</div>
 			<!-- Top Menu Items -->
 			<ul class="nav navbar-right top-nav">
@@ -289,10 +291,29 @@
 				</div>
 				<!-- /.row -->
 
+				<div class="col-xs-9">
+					<div class="input-group">
+						<form id="publishStream">
+							<select name="_okey">
+								<%
+									for (String okey : engine.getS3_drv().getObjectKeys()) {
+								%>
+								<option><%=okey%></option>
+								<%
+									}
+								%>
+							</select>
+							<!-- <input type="text" class="form-control" name="_dataurl" placeholder="Data File URL"> -->
+							<button type="submit" class="btn btn-danger disabled">Publish
+								Stream (S3)</button>
+						</form>
+					</div>
+					<!-- /input-group -->
+				</div>
+				<!-- /.col-lg-6 -->
 
 
-
-				 <div class="row"> 
+				<div class="row"> 
 										
 							
 									
