@@ -1,3 +1,11 @@
 *.properties
 
 *.class
+
+# Generated files
+bin/
+gen/
+
+# Gradle files
+.gradle/
+build/
