@@ -13,29 +13,33 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.operation.utils.ConfigProperty;
 
 public class S3Driver {
-	private static String bucketName = "elasticbeanstalk-us-east-1-511368698353"; 
+	private static String bucketName;
 	private static String key        = "*** provide object key ***"; 
 
 	AmazonS3Client s3;
 	public AmazonS3Client getS3() {
 		return s3;
 	}
+	
+	ConfigProperty prop;
 		
 	public S3Driver(){
 		s3=new ProfileCredentials().getS3Client();
-		//getObjectKeys();
+		prop=new ConfigProperty();
+		bucketName=prop.getProperty("bucketName");
 	}
 	
-	public List<String> getObjectKeys(){
+	public List<String> getObjectKeys(String path){
 		List<String> okeys=new LinkedList<String>();
 		// Send sample request (list objects in a given bucket).
 		ObjectListing objectListing = s3.listObjects(new 
 		     ListObjectsRequest().withBucketName(bucketName));
 		for(S3ObjectSummary s3ob:objectListing.getObjectSummaries()){
 			String okey=s3ob.getKey();
-			if(okey.startsWith("resources/datasets/")){
+			if(okey.startsWith(path)){
 				okeys.add(okey);
 			}
 			//System.out.println(s3ob.getBucketName()+" "+s3ob.getKey());

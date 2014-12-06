@@ -1,54 +1,29 @@
 package com.pubsub.data;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
-
-import org.paukov.combinatorics.Factory;
-import org.paukov.combinatorics.Generator;
-import org.paukov.combinatorics.ICombinatoricsVector;
 
 
 
 
 class MultiThread extends Thread {
-	private Thread t;
-	private File file;
-	private int size;
+	private Thread t;	
 	private double skew;
-	private float bottom = 0;
-	private LinkedList<String> atts;
-	private float[] zipfarr;
-	private Random rnd = new Random();
+	private float bottom = 0;	
+	private float[] zipfarr;	
 	int ccount=0;
+	private Utility utility;
+	private int size;
+	
 	
 
 	MultiThread(File file) throws IOException {
-		this.file = file;		
+		utility = new Utility(file);		
 		this.skew = 1;
-		this.atts = readFile();
-		//this.size=5;
-		this.size = this.atts.size();
-		this.zipfarr=new float[this.size];
+		this.size = utility.getSize();
+		this.zipfarr=new float[utility.getSize()];		
 		
-		//for(int i=1;i<=this.zipfarr.length;i++) this.zipfarr[i-1]=i;
-		
-		System.out.println("Array Size: "+this.size);
+		System.out.println("Array Size: "+utility.getSize());
 		
 		updateBottom(this.size);
 		
@@ -97,65 +72,13 @@ class MultiThread extends Thread {
 		   System.out.println("Rank: "+i+" Freq: "+freqs);
 	   }
 	   
-	  writeFile(wpage, "zipfRanks_N="+this.size+" r="+r+".gp", true);
+	  utility.writeFile(wpage, "zipfRanks_N="+this.size+" r="+r+".gp", true);
 	   
 	   
 	   System.out.println("Att Sum: "+att_sum);
 	   System.out.println("Zipf Att Sum: "+all_att_sum);   
 	  
 	   
-//	   List<Integer> keys = new ArrayList(hatt_freq.keySet());
-//	   
-//	   
-//	   Collections.shuffle(keys);
-//	   
-//	   boolean flag=true;
-//	   
-//	   for(int i=0;i<keys.size();i+=r){
-//		   int j=0;
-//		   while(j<r){
-//			   wpage+=(i+j)+",";
-//			   if(hatt_freq.get(i+j)<=0){
-//				   flag=false;
-//			   }			   
-//			   j++;
-//		   }
-//		   
-//		   if(flag){
-//			   int k=0;
-//			   while(k<r){
-//				   wpage+=(i+k)+",";
-//				   hatt_freq.put(i+k,hatt_freq.get(i+k)-1);	   
-//				   k++;
-//			   }
-//			   
-//		   }
-//		   wpage+="\n";
-//		   
-//	   }
-//	   
-//	   
-//	   //System.out.println(att_freqs.toString());
-//	   
-//	   int[] tuples=new int[r];
-//	   boolean flag=true;
-//	   while(flag){
-//		   for(int i=0;i<tuples.length;i++){
-//			   tuples[i]=rnd.nextInt(r);
-//			   if(att_freqs[tuples[i]]<=0){
-//				   flag=false
-//				   break;			   
-//			   }
-//		   }
-//	   }
-	   
-	   
-	   
-	  
-	 
-	 
-		
-		
 	
 	}	
 	
@@ -200,54 +123,7 @@ class MultiThread extends Thread {
 	
 	
 	
-	public LinkedList<String> readFile() throws IOException{
-		FileReader fr = new FileReader(file.getAbsoluteFile());
-		
-		BufferedReader br = new BufferedReader(fr);		
 	
-		String line;
-		LinkedList<String> atts=new LinkedList<String>();
-		while((line=br.readLine())!=null){			
-				String[] tuple = line.split("=", 2);
-				String att = tuple[0];
-				att.replaceAll("\\s+","");
-				atts.add(att);
-		}
-		br.close();
-		return atts;
-	}
-	
-	public String[] getAttributesArray(){	
-		return this.atts.toArray(new String[this.size]);
-	}
-	
-	public void writeFile(String wpage, String outputFileName, boolean append) throws IOException, InterruptedException{
-		String cfolderName=this.file.getName().split("_")[2];
-		String folderPath="gen//ZipfAttributes//LocalZipf//"+cfolderName;
-		
-		File cfolder = new File(folderPath);	
-		
-		if (!cfolder.exists()) {
-			cfolder.mkdir();
-		}
-		
-		String filePath=folderPath+"//"+outputFileName;
-		//String filePath="gen//ZipfAttributes//LocalZipf//"+outputFileName;
-		File afile = new File(filePath);					
-		
-		if (!afile.exists()) {
-			afile.createNewFile();
-		}
-		
-		FileWriter afw = new FileWriter(afile.getAbsoluteFile(),append);
-		BufferedWriter abw = new BufferedWriter(afw);
-		
-		abw.write(wpage);
-		
-		Thread.sleep(2000);
-		
-		abw.close();
-	}
 
 
 	public void run() {

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.amazonaws.compute.Engine;
+import com.amazonaws.compute.kinesis.KinesisDriver;
 
 /**
  * Servlet implementation class PublishStream
@@ -43,9 +44,14 @@ public class PublishStream extends HttpServlet {
 		System.out.println("Published Stream: ");
 		String _dataUrl=request.getParameter("_dataurl");
 		String _okey=request.getParameter("_okey");
-		String lastSeqNumber=new Engine().getKin_drv().addDataRecords("EC2Stream",_okey);
+		try {
+			new KinesisDriver("AStream", 2).streamWritePub(_okey);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		//new Engine().getS3_drv().getObjectKeys();
-		if(lastSeqNumber!=null) isValid=true;
+		isValid=true;
 		
 		map.put("isValid", isValid);
 		gsonwrt.write(response,map);

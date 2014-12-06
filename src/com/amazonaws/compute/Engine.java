@@ -4,6 +4,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import com.amazonaws.auth.ProfileCredentials;
+import com.amazonaws.compute.kinesis.KinesisDriver;
 import com.amazonaws.services.sns.util.Topics;
 
 public class Engine {
@@ -29,16 +30,17 @@ public class Engine {
     public S3Driver getS3_drv() {
 		return s3_drv;
 	}
-
-    public KinesisDriver kin_drv;    
-    public KinesisDriver getKin_drv() {
-		return kin_drv;
-	}
+    
 
 	ProfileCredentials profile;
     
     String topicArn;
 
+	private KinesisDriver kin_drv;
+
+	public KinesisDriver getKin_drv() {
+		return kin_drv;
+	}
 	
 	public String getTopicArn() {
 		return topicArn;
@@ -103,27 +105,8 @@ public class Engine {
 	
 	}
 	
-	/*public void listFilesForFolder(File folder) {
-	    for (File fileEntry : folder.listFiles()) {
-	        if (fileEntry.isDirectory()) {
-	            listFilesForFolder(fileEntry);
-	        } else {
-	        	String dname=fileEntry.getName();
-	        	dlist.add(dname);
-	        }
-	    }
-	}
 	
-	public List<String> getDlist() {
-		
-		return dlist;
-	}
-	*/
-	
-	public static void main(String[] args) {
-		
 
-	}
 
 
 	

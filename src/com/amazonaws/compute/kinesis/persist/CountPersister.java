@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amazonaws.compute.kinesis.counter;
+package com.amazonaws.compute.kinesis.persist;
 
 import com.amazonaws.compute.kinesis.counter.CountingRecordProcessor;
 

@@ -1,24 +1,14 @@
-/*
- * Copyright 2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
+package com.amazonaws.compute.kinesis.relevancy;
 
-package com.amazonaws.compute.kinesis.counter;
+import java.io.IOException;
 
+import com.amazonaws.compute.kinesis.KinesisDriver;
+import com.amazonaws.compute.kinesis.counter.CountingRecordProcessor;
+import com.amazonaws.compute.kinesis.counter.CountingRecordProcessorConfig;
 import com.amazonaws.compute.kinesis.persist.CountPersister;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
-import com.pubsub.publisher.Publication;
+import com.pubsub.subindex.InvertedIndex;
 
 
 /**
@@ -26,10 +16,11 @@ import com.pubsub.publisher.Publication;
  *
  * @param <T> The type of records the processors this factory creates are capable of counting.
  */
-public class CountingRecordProcessorFactory<T> implements IRecordProcessorFactory {
+public class RelevancyRecordProcessorFactory<T> implements IRecordProcessorFactory {
 
     private Class<T> recordType;
-    private CountPersister<T> persister;
+    //private CountPersister<T> persister;
+    private InvertedIndex idx;
     private int computeRangeInMillis;
     private int computeIntervalInMillis;
     private CountingRecordProcessorConfig config;
@@ -40,11 +31,12 @@ public class CountingRecordProcessorFactory<T> implements IRecordProcessorFactor
      *
      * @see #CountingRecordProcessorFactory(Class, CountPersister, int, int, CountingRecordProcessorConfig)
      */
-    public CountingRecordProcessorFactory(Class<T> recordType,
-            CountPersister<T> persister,
+    public RelevancyRecordProcessorFactory(Class<T> recordType,
+            KinesisDriver kdriver,
             int computeRangeInMillis,
             int computeIntervalInMillis) {
-        this(recordType, persister, computeRangeInMillis, computeIntervalInMillis, new CountingRecordProcessorConfig());
+        //this(recordType, computeRangeInMillis, computeIntervalInMillis, new CountingRecordProcessorConfig());
+    	//this()
     }
 
     /**
@@ -61,19 +53,15 @@ public class CountingRecordProcessorFactory<T> implements IRecordProcessorFactor
      * @throws IllegalArgumentException if computeRangeInMillis or computeIntervalInMillis are not greater than 0 or
      *         computeRangeInMillis is not evenly divisible by computeIntervalInMillis.
      */
-    public CountingRecordProcessorFactory(Class<T> recordType,
-            CountPersister<T> persister,
+    public RelevancyRecordProcessorFactory(Class<T> recordType, 
+    		InvertedIndex idx,
             int computeRangeInMillis,
-            int computeIntervalInMillis,
-            CountingRecordProcessorConfig config) {
+            int computeIntervalInMillis) {
         if (recordType == null) {
             throw new NullPointerException("recordType must not be null");
         }
-        if (persister == null) {
-            throw new NullPointerException("persister must not be null");
-        }
-        if (config == null) {
-            throw new NullPointerException("config must not be null");
+        if (idx == null) {
+            throw new NullPointerException("subscription index must not be null");
         }
         if (computeRangeInMillis <= 0) {
             throw new IllegalArgumentException("computeRangeInMillis must be > 0");
@@ -87,10 +75,10 @@ public class CountingRecordProcessorFactory<T> implements IRecordProcessorFactor
         }
 
         this.recordType = recordType;
-        this.persister = persister;
+        this.idx=idx;
         this.computeRangeInMillis = computeRangeInMillis;
         this.computeIntervalInMillis = computeIntervalInMillis;
-        this.config = config;
+        this.config = new CountingRecordProcessorConfig();
     }
 
     /**
@@ -98,11 +86,19 @@ public class CountingRecordProcessorFactory<T> implements IRecordProcessorFactor
      * every interval.
      */    
 	@Override
-    public IRecordProcessor createProcessor() {
-        return new CountingRecordProcessor<T>(config,
-                recordType,
-                persister,
-                computeRangeInMillis,
-                computeIntervalInMillis);
+    public IRecordProcessor createProcessor(){        
+		RelevancyRecordProcessor<T> rrp=null;
+		try {
+			rrp=new RelevancyRecordProcessor<T>(config,
+			        recordType,
+			        idx,
+			        computeRangeInMillis,
+			        computeIntervalInMillis);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return rrp;
+		
     }
 }

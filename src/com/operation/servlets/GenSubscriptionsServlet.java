@@ -1,9 +1,12 @@
 package com.operation.servlets;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -11,19 +14,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.amazonaws.compute.Engine;
-import com.amazonaws.compute.kinesis.KinesisDriver;
+import com.pubsub.data.SubGenerator;
 
 /**
- * Servlet implementation class ProcessStream
+ * Servlet implementation class GenSubscriptionsServlet
  */
-@WebServlet("/processS")
-public class ProcessStream extends HttpServlet {
+@WebServlet("/generateSub")
+public class GenSubscriptionsServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	GsonWriter gsonwrt;
+	
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public ProcessStream() {
+    public GenSubscriptionsServlet() {
         super();
         gsonwrt=new GsonWriter();
     }
@@ -41,21 +45,18 @@ public class ProcessStream extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Map<String,Object> map=new HashMap<String,Object>();
 		boolean isValid=false;
-		System.out.println("Action Binded: Processing Stream");
-		String _okeysub=request.getParameter("_okeysub");
+		System.out.println("Action Binded: Generating subscriptions..");
 		
-		KinesisDriver kdriver=new KinesisDriver("AStream", 2);
+		ServletContext context = getServletContext();
+		String contextPath = context.getRealPath("//GenSubscription//");		
 		
-		if(kdriver.getIdx()==null){			
-			kdriver.generateIndex(_okeysub);			
-		}
+		SubGenerator subgen=new SubGenerator(contextPath);		
 		
-		kdriver.matchPublications();
-		//new Engine().getKin_drv().startProcessingData();
 		isValid=true;
 		
 		map.put("isValid", isValid);
 		gsonwrt.write(response,map);
 	}
 
+	
 }

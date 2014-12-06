@@ -13,9 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amazonaws.compute.kinesis.counter;
+package com.amazonaws.compute.kinesis.slidingwindow;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+
+import com.pubsub.publisher.Publication;
+import com.pubsub.subindex.InvertedIndex;
 
 /**
  * Computes a total count of occurrences over a moving window. All calls to increment will be added to the current
@@ -30,14 +35,26 @@ public class SlidingWindowCounter<ObjectType> {
     private int tailBucket;
     // Keep track of the total window advances so we can answer the question: Is this window full?
     private int totalAdvances;
+    public InvertedIndex idx;
 
-    public SlidingWindowCounter(int windowSize) {
+    public SlidingWindowCounter(int windowSize) throws IOException {
         if (windowSize < 1) {
             throw new IllegalArgumentException("windowSize must be >= 1");
         }
         this.windowSize = windowSize;
 
         counter = new BucketBasedCounter<ObjectType>(windowSize);
+        headBucket = 0;
+        tailBucket = getNextBucket(headBucket);
+    }
+    
+    public SlidingWindowCounter(int windowSize, InvertedIndex idx) throws IOException {
+        if (windowSize < 1) {
+            throw new IllegalArgumentException("windowSize must be >= 1");
+        }
+        this.windowSize = windowSize;
+        this.idx=idx;
+        counter = new BucketBasedCounter<ObjectType>(windowSize,idx);
         headBucket = 0;
         tailBucket = getNextBucket(headBucket);
     }
@@ -51,6 +68,10 @@ public class SlidingWindowCounter<ObjectType> {
      */
     private int getNextBucket(int bucket) {
         return (bucket + 1) % windowSize;
+    }
+    
+    private int getWindowBucket(int bucket) {
+    	return bucket % windowSize;
     }
 
     /**
@@ -67,7 +88,7 @@ public class SlidingWindowCounter<ObjectType> {
      * 
      * @return A mapping of ObjectType -> total count across all buckets.
      */
-    public Map<ObjectType, Long> getCounts() {
+    public Map<Integer,List<Publication>> getCounts() {
         return counter.getCounts();
     }
 
@@ -75,15 +96,21 @@ public class SlidingWindowCounter<ObjectType> {
      * Advance the window "one bucket". This will remove the oldest bucket and any count stored in it.
      */
     public void advanceWindow() {
-        counter.clearBucket(tailBucket);
+        
 
-        headBucket = tailBucket;
+        //headBucket = tailBucket;
+    	headBucket = getWindowBucket(totalAdvances);
         tailBucket = getNextBucket(headBucket);
 
-        if (!isWindowFull()) {
+        //Clear previous window bucket
+        counter.clearBucket(headBucket);
+        
+        //if (!isWindowFull()) {
             // Only increment if our window has not yet filled up.
             totalAdvances++;
-        }
+        //}
+            //System.out.println("AdvanceOneInterval_Stepin_Stepin");
+        System.out.println("Advancing.. "+totalAdvances+" Head: "+headBucket+" Tail: "+tailBucket);
     }
 
     /**
@@ -92,7 +119,7 @@ public class SlidingWindowCounter<ObjectType> {
      * @return {@code true} if the window is full.
      */
     public boolean isWindowFull() {
-        return windowSize <= totalAdvances;
+        return getWindowBucket(totalAdvances)<=0;
     }
 
     /**

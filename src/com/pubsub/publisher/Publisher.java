@@ -2,6 +2,7 @@ package com.pubsub.publisher;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
@@ -12,8 +13,7 @@ import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.model.ProvisionedThroughputExceededException;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pubsub.model.Publication;
-import com.pubsub.model.PublicationFactory;
+
 
 public class Publisher {
 	private static final Log LOG = LogFactory.getLog(Publisher.class);
@@ -54,7 +54,9 @@ public class Publisher {
     public void sendPairs(long n, long delayBetweenRecords, TimeUnit unitForDelay) throws InterruptedException {
         for (int i = 0; i < n && !Thread.currentThread().isInterrupted(); i++) {
         	sendPublication();
-            Thread.sleep(unitForDelay.toMillis(delayBetweenRecords));
+        	if (delayBetweenRecords > 0) {
+        		Thread.sleep(unitForDelay.toMillis(delayBetweenRecords));
+        	}
         }
     }
 
@@ -77,6 +79,16 @@ public class Publisher {
         }
     }
     
+    public void sendWindowAll(long delayBetweenRecords, TimeUnit unitForDelay) throws InterruptedException {
+        List<Publication> pubList=pubFactory.getPublications();
+    	for (int i = 0; i < pubFactory.getFactorySize() && !Thread.currentThread().isInterrupted(); i++) {
+        	sendWindowPublication(pubList.get(i));
+        	if (delayBetweenRecords > 0) {
+        		Thread.sleep(unitForDelay.toMillis(delayBetweenRecords));
+        	}
+        }
+    }
+    
     /**
      * Send a single pair to Amazon Kinesis using PutRecord.
      */
@@ -93,15 +105,16 @@ public class Publisher {
         PutRecordRequest putRecord = new PutRecordRequest();
         putRecord.setStreamName(streamName);
         // We use the resource as the partition key so we can accurately calculate totals for a given resource
-        putRecord.setPartitionKey(publication.getResource());
+        putRecord.setPartitionKey(publication.getPclass());
         putRecord.setData(ByteBuffer.wrap(bytes));
         // Order is not important for this application so we do not send a SequenceNumberForOrdering
         putRecord.setSequenceNumberForOrdering(null);
         
-        System.out.println("Push Publication: "+publication.getResource()+" "+publication.getReferee()+" "+publication.getTimestamp());
+        
 
         try {
             kinesis.putRecord(putRecord);
+            System.out.println("Push Publication: "+publication.getPclass()+" "+publication.getData()+" "+publication.getIssuedTime());
         } catch (ProvisionedThroughputExceededException ex) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(String.format("Thread %s's Throughput exceeded. Waiting 10ms", Thread.currentThread().getName()));
@@ -116,4 +129,43 @@ public class Publisher {
         }
     }
 
+    /**
+     * Send a single pair to Amazon Kinesis using PutRecord.
+     */
+    private void sendWindowPublication(Publication publication) {
+        //Publication publication = pubFactory.create();
+        byte[] bytes;
+        try {
+            bytes = JSON.writeValueAsBytes(publication);
+        } catch (IOException e) {
+            LOG.warn("Skipping pair. Unable to serialize: '" + publication + "'", e);
+            return;
+        }
+
+        PutRecordRequest putRecord = new PutRecordRequest();
+        putRecord.setStreamName(streamName);
+        // We use the resource as the partition key so we can accurately calculate totals for a given resource
+        putRecord.setPartitionKey(publication.getPclass());
+        putRecord.setData(ByteBuffer.wrap(bytes));
+        // Order is not important for this application so we do not send a SequenceNumberForOrdering
+        putRecord.setSequenceNumberForOrdering(null);
+        
+        
+
+        try {
+            kinesis.putRecord(putRecord);
+            System.out.println("Push Publication: "+publication.getPclass()+" "+publication.getData()+" "+publication.getIssuedTime());
+        } catch (ProvisionedThroughputExceededException ex) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(String.format("Thread %s's Throughput exceeded. Waiting 10ms", Thread.currentThread().getName()));
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        } catch (AmazonClientException ex) {
+            LOG.warn("Error sending record to Amazon Kinesis.", ex);
+        }
+    }
 }

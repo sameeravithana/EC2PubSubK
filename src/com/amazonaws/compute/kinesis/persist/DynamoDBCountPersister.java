@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amazonaws.compute.kinesis.counter;
+package com.amazonaws.compute.kinesis.persist;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -32,9 +32,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.amazonaws.compute.kinesis.counter.HttpReferrerPairsCount;
+import com.amazonaws.compute.kinesis.counter.ReferrerCount;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
-import com.pubsub.model.Publication;
+import com.pubsub.publisher.Publication;
 
 
 /**
@@ -139,22 +141,22 @@ public class DynamoDBCountPersister implements CountPersister<Publication> {
         for (Map.Entry<Publication, Long> count : objectCounts.entrySet()) {
             // Check for an existing counts for this resource
         	Publication pair = count.getKey();
-            HttpReferrerPairsCount pairCount = countMap.get(pair.getResource());
+            HttpReferrerPairsCount pairCount = countMap.get(pair.getPclass());
             if (pairCount == null) {
                 // Create a new pair if this resource hasn't been seen yet in this batch
                 pairCount = new HttpReferrerPairsCount();
-                pairCount.setResource(pair.getResource());
+                pairCount.setResource(pair.getPclass());
                 pairCount.setTimestamp(Calendar.getInstance(UTC).getTime());
                 pairCount.setReferrerCounts(new ArrayList<ReferrerCount>());
                 pairCount.setHost(hostname);
-                countMap.put(pair.getResource(), pairCount);
+                countMap.put(pair.getPclass(), pairCount);
                 
                 System.out.println("Put PairCount to DynamoDB: "+pairCount);
             }
 
             // Add referrer to list of refcounts for this resource and time
             ReferrerCount refCount = new ReferrerCount();
-            refCount.setReferrer(String.valueOf(pair.getReferee()));
+            refCount.setReferrer(String.valueOf(pair.getData()));
             refCount.setCount(count.getValue());
             pairCount.getReferrerCounts().add(refCount);
         }

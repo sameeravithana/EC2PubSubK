@@ -13,9 +13,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.amazonaws.compute.Engine;
+import com.amazonaws.compute.kinesis.KinesisDriver;
 import com.amazonaws.services.kinesis.model.Record;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pubsub.model.Publication;
+import com.pubsub.publisher.Publication;
+
 
 /**
  * Servlet implementation class RefreshStream
@@ -49,19 +51,21 @@ public class RefreshStream extends HttpServlet {
 		Map<String,Object> map=new HashMap<String,Object>();
 		boolean isValid=false;
 		System.out.println("Action Binded: Refreshing Stream");
-		List<Record> records=new Engine().getKin_drv().getDataRecords();
+		List<Record> records=new KinesisDriver("AStream", 2).getDataRecords();
 		
 		for(Record record:records) { 
 			HashMap<String, Object> rmap=new HashMap<String,Object>();
-			String dataRecord = new String(record.getData().array(),	Charset.forName("UTF-8")); 
+			String dataRecord = new String(record.getData().array(),Charset.forName("UTF-8")); 
 			Publication pubRecord = JSON.readValue(dataRecord, Publication.class);				
 			String partitionKey = record.getPartitionKey(); 
 			String seqNumber = record.getSequenceNumber(); 
-				rmap.put("publication", pubRecord);
+				rmap.put("publication", dataRecord);
 				rmap.put("partitionKey",partitionKey);
 				rmap.put("seqNumber",seqNumber);
 				
 				map.put(seqNumber, rmap);
+				
+				System.out.println("Publication: "+dataRecord+ " Partitionkey: "+partitionKey+" SeqNo: "+seqNumber);
 		}
 		
 		isValid=true;

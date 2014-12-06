@@ -70,12 +70,15 @@ public class Graph {
   
   public boolean addVertexToSeqNo(int seqno,Vertex v) {
 	    boolean added=false;    
-	    
+	    //try{
 	    if (findVertexByName(v.getName())==null) {
 	      verticies.add(seqno,v);
 	      added=true;
 	      
 	    }
+	    /*}catch(IndexOutOfBoundsException iex){
+	    	System.out.println("Index out|");
+	    }*/
 	    return added;
 	  }
 
@@ -96,6 +99,10 @@ public class Graph {
    */
   public Vertex getRootVertex() {
     return rootVertex;
+  }
+  
+  public void refreshGraph(){
+	  for(Vertex v:verticies) v.clearMatch();
   }
 
   /**
@@ -420,6 +427,17 @@ public class Graph {
 		}
 		return totalCost;
 	}
+	
+	public double computeAverageEdgeWeight(){
+		double sumWeight=0;
+		for(Edge e:this.getEdges()){
+			//System.out.print(e.getCost()+" ");
+			sumWeight+=e.getCost();
+		}
+		//System.out.println(sumWeight);
+		double avgWeight=sumWeight/this.getEdges().size();
+		return avgWeight;
+	}
   
 
 
@@ -508,6 +526,8 @@ public class Graph {
     StringBuffer tmp = new StringBuffer("Graph[");
     for (Vertex v : verticies){
       tmp.append(v);
+      String seqno=String.valueOf(v.getSeqno());
+      tmp.append(" seqno: "+seqno);
       tmp.append("\n");
     }
     tmp.append(']');
@@ -519,6 +539,8 @@ public class Graph {
 		StringBuffer tmp = new StringBuffer("Graph[");
 		for (Vertex v : verticies) {
 			tmp.append(v+" Match Flag: "+v.isMatch());
+			String seqno=String.valueOf(v.getSeqno());
+		    tmp.append(" seqno: "+seqno);
 			tmp.append("\n");
 		}
 		tmp.append(']');
@@ -969,6 +991,14 @@ class Vertex {
     mark();
   }
 
+  /**
+   * Clear the visited mark flag.
+   * 
+   */
+  public void clearMatch() {
+    match = false;
+  }
+  
   /**
    * Clear the visited mark flag.
    * 

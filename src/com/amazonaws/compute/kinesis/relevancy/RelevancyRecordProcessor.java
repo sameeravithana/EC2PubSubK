@@ -1,24 +1,8 @@
-/*
- * Copyright 2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-package com.amazonaws.compute.kinesis.counter;
+package com.amazonaws.compute.kinesis.relevancy;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.amazonaws.compute.kinesis.KinesisDriver;
+import com.amazonaws.compute.kinesis.counter.CountingRecordProcessorConfig;
 import com.amazonaws.compute.kinesis.persist.CountPersister;
 import com.amazonaws.compute.kinesis.slidingwindow.SlidingWindowCounter;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
@@ -42,15 +27,11 @@ import com.operation.utils.Clock;
 import com.operation.utils.NanoClock;
 import com.operation.utils.Timer;
 import com.pubsub.publisher.Publication;
+import com.pubsub.subindex.GenerateIndex;
+import com.pubsub.subindex.InvertedIndex;
 
-/**
- * Computes a map of (HttpReferrerPair -> count(pair)) over a fixed range of time. Counts are computed at the intervals
- * provided.
- *
- * @param <T> The type of records this processor is capable of counting.
- */
-public class CountingRecordProcessor<T> implements IRecordProcessor {
-    private static final Log LOG = LogFactory.getLog(CountingRecordProcessor.class);
+public class RelevancyRecordProcessor<T> implements IRecordProcessor{
+	private static final Log LOG = LogFactory.getLog(RelevancyRecordProcessor.class);
 
     // Lock to use for our timer
     private static final Clock NANO_CLOCK = new NanoClock();
@@ -75,7 +56,7 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
     private ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(2);
 
     // This is responsible for persisting our counts every interval
-    private CountPersister<T> persister;
+    //private CountPersister<T> persister;
     
     private KinesisDriver kdriver;
 
@@ -83,29 +64,22 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
 
     // The type of record we expect to receive as JSON
     private Class<T> recordType;
+    
+	private InvertedIndex idx;
 
-    /**
-     * Create a new processor.
-     *
-     * @param config Configuration for this record processor.
-     * @param recordType The type of record we expect to receive as a UTF-8 JSON string.
-     * @param persister Counts will be persisted with this persister.
-     * @param computeRangeInMillis Range to compute distinct counts across
-     * @param computeIntervalInMillis Interval between computing total count for the overall time range.
-     */
-    public CountingRecordProcessor(CountingRecordProcessorConfig config,
-            Class<T> recordType,
-            CountPersister<T> persister,
-            int computeRangeInMillis,
-            int computeIntervalInMillis) {
-        if (config == null) {
+
+	public RelevancyRecordProcessor(CountingRecordProcessorConfig config,
+			Class<T> recordType,
+			InvertedIndex idx,
+			int computeRangeInMillis, int computeIntervalInMillis) throws IOException {
+    	if (config == null) {
             throw new NullPointerException("config must not be null");
         }
         if (recordType == null) {
             throw new NullPointerException("recordType must not be null");
         }
-        if (persister == null) {
-            throw new NullPointerException("persister must not be null");
+        if (idx == null) {
+            throw new NullPointerException("subscription index must not be null");
         }
         if (computeRangeInMillis <= 0) {
             throw new IllegalArgumentException("computeRangeInMillis must be > 0");
@@ -117,34 +91,34 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
             throw new IllegalArgumentException("compute range must be evenly divisible by compute interval to support "
                     + "accurate intervals");
         }
-
+        
         this.config = config;
         this.recordType = recordType;
-        this.persister = persister;
+        this.kdriver = new KinesisDriver("A1Stream", 2);
         this.computeRangeInMillis = computeRangeInMillis;
         this.computeIntervalInMillis = computeIntervalInMillis;
+        this.idx=idx;
 
         // Create an object mapper to deserialize records that ignores unknown properties
         JSON = new ObjectMapper();
-        JSON.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        JSON.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);        		
         
-        System.out.println("CountingRecordProcessor");
-    }
-    
-
+        System.out.println("RelevancyRecordProcessor");
+	}
+	
 	@Override
-    public void initialize(String shardId) {
-        kinesisShardId = shardId;
+	public void initialize(String shardId) {
+		kinesisShardId = shardId;
         resetCheckpointAlarm();
 
         System.out.println("Shard Id: "+shardId);
-        System.out.println("Init: DynamoDB Persister ");
-        persister.initialize();
+        //System.out.println("Init: DynamoDB Persister ");
+        //persister.initialize();
 
         System.out.println("Init: Sliding Window");
         // Create a sliding window whose size is large enough to hold an entire range of individual interval counts.
         try {
-			counter = new SlidingWindowCounter<T>((int) (computeRangeInMillis / computeIntervalInMillis));
+			counter = new SlidingWindowCounter<T>((int) (computeRangeInMillis / computeIntervalInMillis), idx);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -170,14 +144,15 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
                 TimeUnit.SECONDS.toMillis(config.getInitialWindowAdvanceDelayInSeconds()),
                 computeIntervalInMillis,
                 TimeUnit.MILLISECONDS);
-        
-    }
-
-    /**
+	}
+	
+	/**
      * Advance the internal sliding window counter one interval. This will invoke our count persister if the window is
      * full.
+	 * @throws InterruptedException 
+	 * @throws IOException 
      */
-    protected void advanceOneInterval() {
+    protected void advanceOneInterval() throws IOException, InterruptedException {
         Map<Integer,List<Publication>> counts = null;
         synchronized (counter) {
             // Only persist the counts if we have a full range of data to report. We don't want partial
@@ -197,22 +172,18 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
         }
         // Persist the counts if we have a full range
         if (counts != null) {
-        	print(counts);
-            //persister.persist(counts);
+        	kdriver.streamWritePub(counts);
         }
     }
     
-    public void print(Map<Integer,List<Publication>> counts){
-    	System.out.println("To be persisted: ");
-    	for(Entry<Integer, List<Publication>> e:counts.entrySet()){
-    		System.out.println("\t"+e.getKey()+" "+e.getValue().size());
-    	}
+    private boolean shouldPersistCounts() {
+        return counter.isWindowFull();
     }
 
-    @Override
-    public void processRecords(List<Record> records, IRecordProcessorCheckpointer checkpointer) {
-        
-    	System.out.println("Processing...");
+	@Override
+	public void processRecords(List<Record> records,
+			IRecordProcessorCheckpointer checkpointer) {
+		System.out.println("Matching...");
     	for (Record r : records) {
             // Deserialize each record as an UTF-8 encoded JSON String of the type provided
             T pair;
@@ -228,7 +199,7 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
             // the counter to compute running totals every interval.
             
             synchronized (counter) {
-            	System.out.println("Processing: "+r.getSequenceNumber());
+            	System.out.println("Matching: "+r.getSequenceNumber());
                 counter.increment(pair);
             }
             System.out.println("\n");
@@ -242,18 +213,10 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
                 resetCheckpointAlarm();
             }
         }
-    }
+		
+	}
 
-    /**
-     * We must have collected a full range window worth of samples before we should persist any counts.
-     *
-     * @return {@code true} if we've collected enough samples to persist a complete count for the entire range.
-     */
-    private boolean shouldPersistCounts() {
-        return counter.isWindowFull();
-    }
-
-    @Override
+	@Override
     public void shutdown(IRecordProcessorCheckpointer checkpointer, ShutdownReason reason) {
         LOG.info("Shutting down record processor for shard: " + kinesisShardId);
 
@@ -298,7 +261,7 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
         for (int i = 0; i < config.getCheckpointRetries(); i++) {
             try {
                 // First checkpoint our persister to guarantee all calculated counts have been persisted
-                persister.checkpoint();
+                //persister.checkpoint();
                 checkpointer.checkpoint();
                 return;
             } catch (ShutdownException se) {
@@ -319,9 +282,6 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
                 // This indicates an issue with the DynamoDB table (check for table, provisioned IOPS).
                 LOG.error("Cannot save checkpoint to the DynamoDB table used by the Amazon Kinesis Client Library.", e);
                 break;
-            } catch (InterruptedException e) {
-                LOG.error("Error encountered while checkpointing count persister.", e);
-                // Fall through to attempt retry
             }
             try {
                 Thread.sleep(config.getCheckpointBackoffTimeInSeconds());
@@ -333,4 +293,5 @@ public class CountingRecordProcessor<T> implements IRecordProcessor {
         LOG.fatal("Couldn't successfully persist data within max retry limit. Aborting the JVM to mimic a crash.");
         System.exit(1);
     }
+
 }

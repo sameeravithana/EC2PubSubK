@@ -9,23 +9,41 @@ public class Predicate {
 	
 	private String _predicate;
 	
-	public Predicate(String _predicate){		
+	private String splitRegex;
+	private int itemCount;
+	
+	public Predicate(){}
+	
+	public Predicate(String _predicate, String splitRegex, int itemCount){
+		this.splitRegex=splitRegex;
+		this.itemCount=itemCount;
+		
 		initPredicate(_predicate);
 	}
 	
 	public void initPredicate(String _predicate){
-		String[] _wblocks=_predicate.split(":",4);
+		String[] _wblocks=_predicate.split(splitRegex,itemCount);
 		
 		this._predicate=_predicate;
 		
-		this.attribute=_wblocks[0];	
-		this.operator=_wblocks[1];		
-		this.value=_wblocks[2];
-		try{
-			this.weight=Double.parseDouble(_wblocks[3]);
-		}catch(NumberFormatException nfe){
+		if(itemCount==4){
+			this.attribute=_wblocks[0];	
+			this.operator=_wblocks[1];		
+			this.value=_wblocks[2];
+			try{
+				this.weight=Double.parseDouble(_wblocks[3]);
+			}catch(NumberFormatException nfe){
+				this.weight=0;
+			}
+		}
+		
+		if(itemCount==2){
+			this.attribute=_wblocks[0];	
+			this.operator="=";		
+			this.value=_wblocks[1];
 			this.weight=0;
 		}
+		
 	}
 
 	public String getAttribute() {
@@ -65,7 +83,8 @@ public class Predicate {
 	}
 
 	public void set_predicate(String _predicate) {
-		initPredicate(_predicate);
+		//initPredicate(_predicate);
+		this._predicate=_predicate;
 	}
 
 }

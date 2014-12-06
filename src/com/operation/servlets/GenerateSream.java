@@ -42,13 +42,13 @@ public class GenerateSream extends HttpServlet {
 		boolean isValid=false;
 		System.out.println("Action Binded: Generating Stream");
 		
-		try {
+		/*try {
 			new Engine().getKin_drv().streamWrite();
 			isValid=true;
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 		
 		map.put("isValid", isValid);
 		gsonwrt.write(response,map);
